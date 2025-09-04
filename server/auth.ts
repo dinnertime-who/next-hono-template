@@ -15,6 +15,9 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  emailAndPassword: {
+    enabled: true,
+  },
   plugins: [
     admin(),
     nextCookies(),
@@ -25,3 +28,8 @@ export const auth = betterAuth({
     username(),
   ],
 });
+
+export type AuthType = {
+  user: typeof auth.$Infer.Session.user | null;
+  session: typeof auth.$Infer.Session.session | null;
+};

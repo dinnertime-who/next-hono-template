@@ -1,4 +1,3 @@
-import { Hono } from "hono";
 import { baseRoute, basicRouter } from "./routes/basic";
 import { HTTPException } from "hono/http-exception";
 import { ExceptionResponse } from "@server/hono/exceptions/core/response";
@@ -7,8 +6,15 @@ import {
   NOT_IMPLEMENTED_CODE,
 } from "@server/hono/exceptions/core/code";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { compress } from "hono/compress";
+import { cors } from "hono/cors";
+import { csrf } from "hono/csrf";
+import { requestId } from "hono/request-id";
+import { secureHeaders } from "hono/secure-headers";
+import { GeoMiddleware } from "hono-geo-middleware";
+import { auth, AuthType } from "@server/auth";
 
-export const app = new OpenAPIHono()
+export const app = new OpenAPIHono<{ Bindings: AuthType }>({ strict: false })
   .basePath("/api")
   .openapi(baseRoute, basicRouter)
   .notFound((c) =>
@@ -49,6 +55,13 @@ export const app = new OpenAPIHono()
       } satisfies ExceptionResponse,
       500
     );
-  });
+  })
+  .on(["POST", "GET"], "/auth/*", (c) => auth.handler(c.req.raw))
+  .use(compress({ encoding: "gzip" }))
+  .use(cors({ origin: "*" }))
+  .use(csrf())
+  .use("*", requestId())
+  .use("*", secureHeaders())
+  .use("*", GeoMiddleware({ extractors: ["vercel"] }));
 
 export type AppType = typeof app;

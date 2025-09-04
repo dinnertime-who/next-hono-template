@@ -3,6 +3,7 @@ import {
   InternalServerErrorSchema,
   NotFoundSchema,
 } from "@server/hono/exceptions";
+import { AuthType } from "@server/auth";
 
 export const baseRoute = createRoute({
   method: "get",
@@ -37,5 +38,7 @@ export const baseRoute = createRoute({
   },
 });
 
-export const basicRouter: RouteHandler<typeof baseRoute> = (c) =>
-  c.json({ message: "Hello, World!" }, 200);
+export const basicRouter: RouteHandler<
+  typeof baseRoute,
+  { Bindings: AuthType }
+> = (c) => c.json({ message: "Hello, World!" }, 200);
