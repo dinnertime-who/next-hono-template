@@ -11,7 +11,7 @@ import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
 import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
-import { GeoMiddleware } from "hono-geo-middleware";
+import { logger } from "hono/logger";
 import { auth, AuthType } from "@server/auth";
 
 export const app = new OpenAPIHono<{ Bindings: AuthType }>({ strict: false })
@@ -31,6 +31,7 @@ export const app = new OpenAPIHono<{ Bindings: AuthType }>({ strict: false })
     )
   )
   .onError(async (err, c) => {
+    console.error(err);
     if (err instanceof HTTPException) {
       return c.json(
         {
@@ -60,8 +61,8 @@ export const app = new OpenAPIHono<{ Bindings: AuthType }>({ strict: false })
   .use(compress({ encoding: "gzip" }))
   .use(cors({ origin: "*" }))
   .use(csrf())
+  .use(logger())
   .use("*", requestId())
-  .use("*", secureHeaders())
-  .use("*", GeoMiddleware({ extractors: ["vercel"] }));
+  .use("*", secureHeaders());
 
 export type AppType = typeof app;
